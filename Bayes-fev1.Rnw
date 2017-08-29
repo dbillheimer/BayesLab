@@ -1,0 +1,486 @@
+
+%%% ==================================================================
+%%% knitr options
+%% chunk options - one line, no breaks. Avoid spaces and periods in labels.
+%% dash - and underscore _ are ok
+<<'RchunkOpts', results='hide', echo=F>>=
+knitr::opts_chunk$set(cache=F, comment=NA, echo=FALSE, results='markup', warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(fig.width=7.5, fig.height=7)
+## what about caching??
+@ 
+
+%%% ==================================================================
+<<'preamble', echo=FALSE>>=
+library("openxlsx")
+library("dplyr")
+library("xtable")
+library("tidyr")
+library("ggplot2")
+library("lme4")
+##library("MASS")
+##library("rms")
+@ 
+
+
+<<readdata>>=
+dta <- read.xlsx("Demographic data for Dean Billheimer 062417.xlsx")
+##head(dta)
+##dim(dta) ## 161 22
+##dta$Sub
+##names(dta)
+##  [1] "Sample.ID"  [2] "Subject"  [3] "Status"   [4] "Age"  [5] "rs1965708.SFTPA2"                          
+##  [6] "Gender"     [7] "Race/Ethnicity" [8] "FEV1.%.predicted" [9] "FVC%.pred"
+## [10] "FEV1/FVC"  [11] "Methcholine.PC20.(mg/ml)"  [12] "Skin.test.result"                          
+## [13] "Blood.Neutrophil.perc."  [14] "Blood.Eosinophil.perc." [15] "ACQ.Score"
+## [16] "eNO" [17] "BAL.macrophages.perc." [18] "BAL.neutrophil.perc." [19] "BAL.eosinophil.perc."
+## [20] "BAL.epithelial.perc." [21] "Exacerbations.per.year"                    
+## [22] "Please.define.degree.of.severity.of.asthma"
+
+duke <- dta %>% filter(Subject <=183)
+##dim(duke) ## 137 22
+## summary(duke)
+##table(duke$Status)
+##summary(duke$Age)
+@
+
+
+
+<<bayes>>=
+library(brms)
+library(lsmeans)
+##names(duke)
+## clean-up the data frame naming
+fev1 <- duke$FEV1.
+fvc <- duke$FVC
+ratio <- duke$"FEV1/FVC"
+asthma.f <- factor(duke$Status)
+spa2.f <- factor(duke$spa2, labels=c("CC", "AC", "AA"))
+tmp.df <- data.frame(fev1, fvc, ratio, asthma.f, spa2.f)
+##names(tmp.df)
+tmp.df$group <- factor(paste(tmp.df[,4], tmp.df[,5], sep="."))
+
+@
+
+\section{FEV$_1$}
+<<fev1>>=
+fev1.lm <- lm(fev1 ~ asthma.f * spa2.f, data=tmp.df)
+fev1.lsm <- lsmeans(fev1.lm, ~ asthma.f * spa2.f)
+summary(fev1.lm)
+anova(fev1.lm)
+summary(fev1.lsm)
+pairs(fev1.lsm)
+
+### brms
+##tmp.df <- data.frame(fev1, asthma.f, spa2.f)
+fit1 <- brm(formula=fev1 ~ asthma.f + (1 | group),
+            data=tmp.df, warmup=1000, iter=2000,
+            control = list(adapt_delta = 0.9))
+
+summary(fit1)
+
+post1 <- posterior_samples(fit1)
+ str(post1)  ## may be a useful approach
+## grep("AA", names(post1))
+## grep("Asthma", names(post1))
+
+m1.AstCC <- apply( post1[c(1, 7)], 1, sum)
+m1.AstAC <- apply( post1[c(1, 6)], 1, sum)
+m1.AstAA <- apply( post1[c(1, 5)], 1, sum)
+m1.NorCC <- apply( post1[c(1, 2, 10)], 1, sum)
+m1.NorAC <- apply( post1[c(1, 2, 9)], 1, sum)
+m1.NorAA <- apply( post1[c(1, 2, 8)], 1, sum)
+
+mc.sum <- function(x) c(mean=mean(x), quantile(x, c(0.025, 0.1, 0.5, 0.9, 0.975)))
+
+
+mcmc.parEst <- rbind("Ast.CC" = mc.sum(m1.AstCC), "Nor.CC" = mc.sum(m1.NorCC),
+                     "Ast.AC" = mc.sum(m1.AstAC), "Nor.AC" = mc.sum(m1.NorAC),
+                     "Ast.AA" = mc.sum(m1.AstAA), "Nor.AA" = mc.sum(m1.NorAA)) 
+
+mcmc.parEst  # nice results
+## xtable(mcmc.parEst)
+
+## cast as data frame with useable names
+parEst.fev1 <- as.data.frame(mcmc.parEst)[c(5, 3, 1, 6, 4, 2),]
+names(parEst.fev1) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+## compare
+summary(fev1.lsm)
+summary(fit1)
+
+### re-order to match graph
+fev1.means <-  as.data.frame(summary(fev1.lsm))[c(5, 3, 1, 6, 4, 2),]
+
+## names(fev1.means)
+## names(parEst.fev1)
+
+## plot(m1.NorCC - sample(m1.NorAC))
+sum(m1.NorCC - sample(m1.NorAC)< 0)/4000
+mc.sum(m1.NorCC - sample(m1.NorAC))
+
+## plot(m1.AstCC - sample(m1.AstAC))
+sum(m1.AstCC - sample(m1.AstAC)< 0)/4000 ## .10
+mc.sum(m1.AstCC - sample(m1.AstAC))
+
+## plot(m1.AstCC - sample(m1.AstAA))
+sum(m1.AstCC - sample(m1.AstAA)< 0)/4000  ## 0.03
+mc.sum(m1.AstCC - sample(m1.AstAA))
+
+##plot(m1.AstAC - sample(m1.AstAA))
+sum(m1.AstAC - sample(m1.AstAA)< 0)/4000  ## 0.002
+mc.sum(m1.AstAC - sample(m1.AstAA))
+
+@ 
+
+<<graph.compare>>=
+graph.offset <- 0.45
+g.offset2 <- 0.55
+
+## ggplot(aes(x=group, y=fev1), data=tmp.df) +
+##   geom_boxplot(outlier.size=0, outlier.alpha=0) +
+##   geom_jitter(width=.2) +
+##     geom_segment(aes(x=c(1:6)+graph.offset, y=q.02, xend=c(1:6)+graph.offset, yend=q.98),
+##                  data=parEst.fev1, col=2) +
+##                      geom_segment(aes(x=c(1:6)+ graph.offset,
+##                                       y=q.10, xend=c(1:6)+graph.offset, yend=q.90),
+##                                   data=parEst.fev1, col=2, lwd=3) +
+##     geom_point(aes(x=c(1:6)+graph.offset, y=mean), data=parEst.fev1, pch=3, col=1) + 
+##         geom_segment(aes(x=c(1:6)+g.offset2, y=lower.CL, xend=c(1:6)+g.offset2, yend=upper.CL),
+##                      data=fev1.means, col='blue') +
+##                          geom_point(aes(x=c(1:6)+g.offset2, y=lsmean),
+##                                     data=fev1.means, col='blue') +
+##       ggtitle("FEV1 for Asthma and SPA2 SNP Groups")
+
+## function to graph data, Bayes, and LSM results
+group.compare <- function(x=group, y=fev1, data.df=tmp.df, bayes.df, lsm.df, title="") {
+    ggplot(aes(x=group, y=y), data=data.df) +
+        geom_boxplot(outlier.size=0, outlier.alpha=0) +
+            geom_jitter(width=.2) +
+    geom_segment(aes(x=c(1:6)+graph.offset, y=q.02, xend=c(1:6)+graph.offset, yend=q.98),
+                 data=bayes.df, col=2) +
+                     geom_segment(aes(x=c(1:6)+ graph.offset,
+                                      y=q.10, xend=c(1:6)+graph.offset, yend=q.90),
+                                  data=bayes.df, col=2, lwd=3) +
+    geom_point(aes(x=c(1:6)+graph.offset, y=mean), data=bayes.df, pch=3, col=1) + 
+        geom_segment(aes(x=c(1:6)+g.offset2, y=lower.CL, xend=c(1:6)+g.offset2, yend=upper.CL),
+                     data=lsm.df, col='blue') +
+                         geom_point(aes(x=c(1:6)+g.offset2, y=lsmean),
+                                    data=lsm.df, col='blue') +
+        ggtitle(title)
+}
+
+set.seed(1959)
+group.compare(x=group, y=fev1, tmp.df, bayes.df=parEst.fev1 , lsm.df=fev1.means,
+              title="FEV1 for Asthma and SPA2 SNP Groups")
+
+@ 
+
+
+\section{FVC}
+<<fvc>>=
+fvc.lm <- lm(fvc ~ asthma.f * spa2.f, data=tmp.df)
+fvc.lsm <- lsmeans(fvc.lm, ~ asthma.f * spa2.f)
+summary(fvc.lm)
+anova(fvc.lm)
+summary(fvc.lsm)
+pairs(fvc.lsm)
+
+### brms
+##tmp.df <- data.frame(fvc, asthma.f, spa2.f)
+fit2 <- brm(formula=fvc ~ asthma.f + (1 | group),
+            data=tmp.df, warmup=1000, iter=2000,
+            control = list(adapt_delta = 0.9))
+
+summary(fit2)
+
+post2 <- posterior_samples(fit2)
+str(post2)  ## may be a useful approach
+## grep("AA", names(post1))
+## grep("Asthma", names(post1))
+
+m2.AstCC <- apply( post2[c(1, 7)], 1, sum)
+m2.AstAC <- apply( post2[c(1, 6)], 1, sum)
+m2.AstAA <- apply( post2[c(1, 5)], 1, sum)
+m2.NorCC <- apply( post2[c(1, 2, 10)], 1, sum)
+m2.NorAC <- apply( post2[c(1, 2, 9)], 1, sum)
+m2.NorAA <- apply( post2[c(1, 2, 8)], 1, sum)
+
+mc2.parEst <- rbind("Ast.CC" = mc.sum(m2.AstCC), "Nor.CC" = mc.sum(m2.NorCC),
+                     "Ast.AC" = mc.sum(m2.AstAC), "Nor.AC" = mc.sum(m2.NorAC),
+                     "Ast.AA" = mc.sum(m2.AstAA), "Nor.AA" = mc.sum(m2.NorAA)) 
+
+mc2.parEst  # nice results
+## xtable(mcmc.parEst)
+
+## cast as data frame with useable names
+parEst.fvc <- as.data.frame(mc2.parEst)[c(5, 3, 1, 6, 4, 2),]
+names(parEst.fvc) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+## compare
+summary(fvc.lsm)
+summary(fit2)
+
+### re-order to match graph
+fvc.means <-  as.data.frame(summary(fvc.lsm))[c(5, 3, 1, 6, 4, 2),]
+
+## names(fvc.means)
+## names(parEst.fvc)
+
+## plot(m1.NorCC - sample(m1.NorAC))
+sum(m2.NorCC - sample(m2.NorAC)< 0)/4000 ## .11
+mc.sum(m2.NorCC - sample(m2.NorAC))
+
+## plot(m2.AstCC - sample(m2.AstAC))
+sum(m2.AstCC - sample(m2.AstAC)< 0)/4000 ## .25
+mc.sum(m2.AstCC - sample(m2.AstAC))
+
+## plot(m2.AstCC - sample(m2.AstAA))
+sum(m2.AstCC - sample(m2.AstAA)< 0)/4000  ## 0.018
+mc.sum(m2.AstCC - sample(m2.AstAA))
+
+##plot(m2.AstAC - sample(m2.AstAA))
+sum(m2.AstAC - sample(m2.AstAA)< 0)/4000  ## 0.002
+mc.sum(m2.AstAC - sample(m2.AstAA))
+@
+
+<<fvc.graph>>=
+set.seed(1959)
+group.compare(x=group, y=fvc, tmp.df, bayes.df=parEst.fvc , lsm.df=fvc.means,
+              title="FVC for Asthma and SPA2 SNP Groups")
+@
+
+
+\section{Ratio}
+
+<<ratio>>=
+ratio.lm <- lm(ratio ~ asthma.f * spa2.f, data=tmp.df)
+ratio.lsm <- lsmeans(ratio.lm, ~ asthma.f * spa2.f)
+summary(ratio.lm)
+anova(ratio.lm)
+summary(ratio.lsm)
+pairs(ratio.lsm)
+
+### brms
+##tmp.df <- data.frame(ratio, asthma.f, spa2.f)
+fit3 <- brm(formula=ratio ~ asthma.f + (1 | group),
+            data=tmp.df, warmup=1000, iter=2000,
+            control = list(adapt_delta = 0.9))
+
+summary(fit3)
+
+post3 <- posterior_samples(fit3)
+str(post3)  ## may be a useful approach
+## grep("AA", names(post1))
+## grep("Asthma", names(post1))
+
+m3.AstCC <- apply( post3[c(1, 7)], 1, sum)
+m3.AstAC <- apply( post3[c(1, 6)], 1, sum)
+m3.AstAA <- apply( post3[c(1, 5)], 1, sum)
+m3.NorCC <- apply( post3[c(1, 2, 10)], 1, sum)
+m3.NorAC <- apply( post3[c(1, 2, 9)], 1, sum)
+m3.NorAA <- apply( post3[c(1, 2, 8)], 1, sum)
+
+mc3.parEst <- rbind("Ast.CC" = mc.sum(m3.AstCC), "Nor.CC" = mc.sum(m3.NorCC),
+                     "Ast.AC" = mc.sum(m3.AstAC), "Nor.AC" = mc.sum(m3.NorAC),
+                     "Ast.AA" = mc.sum(m3.AstAA), "Nor.AA" = mc.sum(m3.NorAA)) 
+
+mc3.parEst  # nice results
+## xtable(mcmc.parEst)
+
+## cast as data frame with useable names
+parEst.ratio <- as.data.frame(mc3.parEst)[c(5, 3, 1, 6, 4, 2),]
+names(parEst.ratio) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+## compare
+summary(ratio.lsm)
+## summary(fit3)
+
+### re-order to match graph
+ratio.means <-  as.data.frame(summary(ratio.lsm))[c(5, 3, 1, 6, 4, 2),]
+
+## names(ratio.means)
+## names(parEst.ratio)
+
+## plot(m1.NorCC - sample(m1.NorAC))
+sum(m3.NorCC - sample(m3.NorAC)< 0)/4000 ## .34
+mc.sum(m3.NorCC - sample(m3.NorAC))
+
+## plot(m3.AstCC - sample(m3.AstAC))
+sum(m3.AstCC - sample(m3.AstAC)< 0)/4000 ## .44
+mc.sum(m3.AstCC - sample(m3.AstAC))
+
+## plot(m3.AstCC - sample(m3.AstAA))
+sum(m3.AstCC - sample(m3.AstAA)< 0)/4000  ## 0.45
+mc.sum(m3.AstCC - sample(m3.AstAA))
+
+##plot(m3.AstAC - sample(m3.AstAA))
+sum(m3.AstAC - sample(m3.AstAA)< 0)/4000  ## 0.39
+mc.sum(m3.AstAC - sample(m3.AstAA))
+@
+
+<<ratio.graph>>=
+set.seed(1959)
+group.compare(x=group, y=ratio, tmp.df, bayes.df=parEst.ratio , lsm.df=ratio.means,
+              title="FEV1/FVC Ratio for Asthma and SPA2 SNP Groups")
+@
+
+
+
+\section{BAL}
+
+<<BAL>>=
+## clean-up the data frame naming
+## head(duke)
+macro <- duke$BAL.macrophages.perc.
+neut <- duke$BAL.neutrophil.perc.
+eosin <- duke$BAL.eosinophil.perc.
+epith <- duke$BAL.epithelial.perc.
+
+BAL.df <- data.frame(macro, neut, eosin, epith, asthma.f, spa2.f, group=tmp.df$group)
+##names(BAL.df)
+##head(BAL.df)
+@
+
+\subsection{Macrophages}
+
+<<macro>>=
+macro.lm <- lm(macro ~ asthma.f * spa2.f, data=BAL.df)
+macro.lsm <- lsmeans(macro.lm, ~ asthma.f * spa2.f)
+summary(macro.lm)
+anova(macro.lm)
+summary(macro.lsm)
+pairs(macro.lsm)
+
+##summary(BAL.df)
+### brms
+##tmp.df <- data.frame(macro, asthma.f, spa2.f)
+fit4 <- brm(formula=macro ~ asthma.f + (1 | group),
+            data=BAL.df, warmup=1000, iter=2000,
+            control = list(adapt_delta = 0.9))
+
+summary(fit4)
+
+post4 <- posterior_samples(fit4)
+str(post4)  ## may be a useful approach
+## grep("AA", names(post1))
+## grep("Asthma", names(post1))
+
+m4.AstCC <- apply( post4[c(1, 7)], 1, sum)
+m4.AstAC <- apply( post4[c(1, 6)], 1, sum)
+m4.AstAA <- apply( post4[c(1, 5)], 1, sum)
+m4.NorCC <- apply( post4[c(1, 2, 9)], 1, sum)
+m4.NorAC <- apply( post4[c(1, 2, 8)], 1, sum)
+m4.NorAA <- apply( post4[c(1, 2, 8)], 1, sum)
+
+mc4.parEst <- rbind("Ast.CC" = mc.sum(m4.AstCC), "Nor.CC" = mc.sum(m4.NorCC),
+                     "Ast.AC" = mc.sum(m4.AstAC), "Nor.AC" = mc.sum(m4.NorAC),
+                     "Ast.AA" = mc.sum(m4.AstAA), "Nor.AA" = mc.sum(m4.NorAA)) 
+
+mc4.parEst  # nice results
+## xtable(mcmc.parEst)
+
+## cast as data frame with useable names
+parEst.macro <- as.data.frame(mc4.parEst)[c(5, 3, 1, 6, 4, 2),]
+names(parEst.macro) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+parEst.macro[4,] <- NA
+parEst.macro
+## compare
+summary(macro.lsm)
+## summary(fit4)
+
+### re-order to match graph
+macro.means <-  as.data.frame(summary(macro.lsm))[c(5, 3, 1, 6, 4, 2),]
+
+## names(macro.means)
+## names(parEst.macro)
+
+## plot(m1.NorCC - sample(m1.NorAC))
+sum(m4.NorCC - sample(m4.NorAC)< 0)/4000 ## .34
+mc.sum(m4.NorCC - sample(m4.NorAC))
+
+## plot(m4.AstCC - sample(m4.AstAC))
+sum(m4.AstCC - sample(m4.AstAC)< 0)/4000 ## .44
+mc.sum(m4.AstCC - sample(m4.AstAC))
+
+## plot(m4.AstCC - sample(m4.AstAA))
+sum(m4.AstCC - sample(m4.AstAA)< 0)/4000  ## 0.45
+mc.sum(m4.AstCC - sample(m4.AstAA))
+
+##plot(m4.AstAC - sample(m4.AstAA))
+sum(m4.AstAC - sample(m4.AstAA)< 0)/4000  ## 0.39
+mc.sum(m4.AstAC - sample(m4.AstAA))
+@
+
+<<macro.graph>>=
+set.seed(1959)
+group.compare(x=group, y=macro, BAL.df, bayes.df=parEst.macro , lsm.df=macro.means,
+              title="Macrophages for Asthma and SPA2 SNP Groups")
+@
+
+\subsection{Neutrophils}
+<<neut>>=
+neut.lm <- lm(neut ~ asthma.f * spa2.f, data=BAL.df)
+neut.lsm <- lsmeans(neut.lm, ~ asthma.f * spa2.f)
+summary(neut.lm)
+anova(neut.lm)
+summary(neut.lsm)
+pairs(neut.lsm)
+
+##summary(BAL.df)
+### brms
+##tmp.df <- data.frame(neut, asthma.f, spa2.f)
+fit5 <- brm(formula=neut ~ asthma.f + (1 | group),
+            data=BAL.df, warmup=1000, iter=2000,
+            control = list(adapt_delta = 0.9))
+
+summary(fit5)
+
+post5 <- posterior_samples(fit5)
+str(post5)  ## may be a useful approach
+## grep("AA", names(post1))
+## grep("Asthma", names(post1))
+
+m5.AstCC <- apply( post5[c(1, 7)], 1, sum)
+m5.AstAC <- apply( post5[c(1, 6)], 1, sum)
+m5.AstAA <- apply( post5[c(1, 5)], 1, sum)
+m5.NorCC <- apply( post5[c(1, 2, 9)], 1, sum)
+m5.NorAC <- apply( post5[c(1, 2, 8)], 1, sum)
+m5.NorAA <- apply( post5[c(1, 2, 8)], 1, sum)
+
+mc5.parEst <- rbind("Ast.CC" = mc.sum(m5.AstCC), "Nor.CC" = mc.sum(m5.NorCC),
+                     "Ast.AC" = mc.sum(m5.AstAC), "Nor.AC" = mc.sum(m5.NorAC),
+                     "Ast.AA" = mc.sum(m5.AstAA), "Nor.AA" = mc.sum(m5.NorAA)) 
+
+mc5.parEst  # nice results
+## xtable(mcmc.parEst)
+
+## cast as data frame with useable names
+parEst.neut <- as.data.frame(mc5.parEst)[c(5, 3, 1, 6, 4, 2),]
+names(parEst.neut) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+parEst.neut[4,] <- NA
+parEst.neut
+## compare
+summary(neut.lsm)
+## summary(fit4)
+
+### re-order to match graph
+neut.means <-  as.data.frame(summary(neut.lsm))[c(5, 3, 1, 6, 4, 2),]
+
+## names(neut.means)
+## names(parEst.neut)
+
+## plot(m1.NorCC - sample(m1.NorAC))
+sum(m5.NorCC - sample(m5.NorAC)< 0)/4000 ## .34
+mc.sum(m5.NorCC - sample(m5.NorAC))
+
+## plot(m5.AstCC - sample(m5.AstAC))
+sum(m5.AstCC - sample(m5.AstAC)< 0)/4000 ## .44
+mc.sum(m5.AstCC - sample(m5.AstAC))
+
+## plot(m5.AstCC - sample(m5.AstAA))
+sum(m5.AstCC - sample(m5.AstAA)< 0)/4000  ## 0.45
+mc.sum(m5.AstCC - sample(m5.AstAA))
+
+##plot(m5.AstAC - sample(m5.AstAA))
+sum(m5.AstAC - sample(m5.AstAA)< 0)/4000  ## 0.39
+mc.sum(m5.AstAC - sample(m5.AstAA))
+@
+
