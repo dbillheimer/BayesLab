@@ -1,0 +1,4 @@
+#! /usr/bin/Rscript --vanilla --default-packages=utils
+###
+bookdown::render_book("index.Rmd")
+
