@@ -15,6 +15,7 @@ description: "Explores the use of Bayesian hierarchical inference in linear mode
 # Preface {-}
 
 To Dean:
+
 Bayesian inference in models with linear structure (e.g. linear models) offers
 advantages in estimation and inference by "borrowing strength" across similar
 groups.  I don't really understand exactly how this works. This ebook is
