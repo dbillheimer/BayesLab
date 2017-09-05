@@ -5,27 +5,27 @@
 
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>BayesLab</title>
-  <meta name="description" content="Bayesian statistics for common lab and translational research problems.">
+  <title>BayesLab - Exploring Bayesian Hierarchical Modeling</title>
+  <meta name="description" content="Explores the use of Bayesian hierarchical inference in linear models.">
   <meta name="generator" content="bookdown 0.4 and GitBook 2.6.7">
 
-  <meta property="og:title" content="BayesLab" />
+  <meta property="og:title" content="BayesLab - Exploring Bayesian Hierarchical Modeling" />
   <meta property="og:type" content="book" />
   <meta property="og:url" content="http://github.com/dbillheimer/BayesLab/" />
   
-  <meta property="og:description" content="Bayesian statistics for common lab and translational research problems." />
+  <meta property="og:description" content="Explores the use of Bayesian hierarchical inference in linear models." />
   <meta name="github-repo" content="dbillheimer/BayesLab" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="BayesLab" />
+  <meta name="twitter:title" content="BayesLab - Exploring Bayesian Hierarchical Modeling" />
   
-  <meta name="twitter:description" content="Bayesian statistics for common lab and translational research problems." />
+  <meta name="twitter:description" content="Explores the use of Bayesian hierarchical inference in linear models." />
   
 
 <meta name="author" content="Dean Billheimer">
 
 
-<meta name="date" content="2017-09-02">
+<meta name="date" content="2017-09-05">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,6 +49,25 @@
 
 
 
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
 
 <link rel="stylesheet" href="style.css" type="text/css" />
 </head>
@@ -63,7 +82,7 @@
       <nav role="navigation">
 
 <ul class="summary">
-<li><a href="./">Minimal Bookdown Start</a></li>
+<li><a href="./">BayesLab - Bayesian Hierarchical Modeling</a></li>
 
 <li class="divider"></li>
 <li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
@@ -81,7 +100,7 @@
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">BayesLab</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">BayesLab - Exploring Bayesian Hierarchical Modeling</a>
           </h1>
         </div>
 
@@ -92,6 +111,16 @@
 <div id="diving-in" class="section level1">
 <h1><span class="header-section-number">Chapter 2</span> Diving In</h1>
 <p>Now let’s talk details.</p>
+<pre class="sourceCode r"><code class="sourceCode r">    <span class="kw">summary</span>(cars)</code></pre>
+<pre><code>##      speed           dist       
+##  Min.   : 4.0   Min.   :  2.00  
+##  1st Qu.:12.0   1st Qu.: 26.00  
+##  Median :15.0   Median : 36.00  
+##  Mean   :15.4   Mean   : 42.98  
+##  3rd Qu.:19.0   3rd Qu.: 56.00  
+##  Max.   :25.0   Max.   :120.00</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">    <span class="kw">plot</span>(cars)</code></pre>
+<p><img src="02-Diving-In_files/figure-html/afig-1.png" width="672" /></p>
 
 
 
@@ -146,6 +175,17 @@ gitbook.start({
 });
 </script>
 
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
 </body>
 
 </html>
