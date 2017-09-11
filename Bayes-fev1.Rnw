@@ -47,7 +47,15 @@ duke <- dta %>% filter(Subject <=183)
 
 
 <<bayes>>=
+library(ggplot2)
+install.packages("Rcpp")
+install.packages("ggplot2")
+install.packages("brms")
+
+library(rstan)
+
 library(brms)
+
 library(lsmeans)
 ##names(duke)
 ## clean-up the data frame naming
