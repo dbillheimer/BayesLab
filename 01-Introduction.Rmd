@@ -5,13 +5,14 @@ Suppose we have a simple experiment with two factors (A/B), each with two levels
 Our general hypothesis is that either factor A or factor B might increase the
 response, or that both together might be required to create an increase.
 
-```{r datasim, fig.width=6}
+```{r datasim, fig.width=6, echo=F}
 library(ggplot2)
 n <- 10
 group <- gl(4, 10, labels=c("ab", "Ab", "aB", "AB"))
 mu <- kronecker(c(3, 4, 4, 5), rep(1, 10))
 set.seed(1959)
 y <- rnorm(4 * n, mu, 1)
+df01 <- data.frame(group=group, y=y)
 qplot(group, y, geom=c("boxplot", "point") ) +
     ggtitle("Observations from a two-factor experiment")
 
@@ -21,18 +22,18 @@ A typical "laboratory" analysis would consider group comparisons using
 $t$-tests.
 
 For ab vs. Ab
-```{r ab.v.Ab}
+```{r ab.v.Ab, echo=F}
 tt1 <- t.test(y[group=="ab"], y[group=='Ab'])
 print(tt1)
 ```
 For ab vs. aB
-```{r ab.v.aB}
+```{r ab.v.aB, echo=F}
 tt2 <- t.test(y[group=="ab"], y[group=='aB'])
 print(tt2)
 ```
 
 and finally for ab vs. AB
-```{r ab.v.AB}
+```{r ab.v.AB, echo=F}
 tt3 <- t.test(y[group=="ab"], y[group=='AB'])
 print(tt3)
 ```
@@ -42,7 +43,7 @@ A simplistic interpretation is that either A ($p = $`tt1$p.value`) or B
 'interact' to create an increase in $y$.
 
 Fix this graph
-```{r stars}
+```{r stars, echo=F}
 qplot(group, y, geom=c("boxplot", "point") ) +
     ggtitle("Observations from a two-factor experiment") +
     geom_segment(aes(x=c(1,1,1), xend=c(2,3,4), y=c(6, 6.4, 6.8), yend=c(6, 6.4, 6.8)),
@@ -54,7 +55,8 @@ qplot(group, y, geom=c("boxplot", "point") ) +
 ```
 
 
-A slightly better analysis considers the groups (and factors) together.
+A slightly different (better?) analysis considers the groups (and factors)
+together. "Better" obviously depends on your hypotheses.
 
 ```{r anova}
 a.fac <- factor(rep(c(rep(0, 10), rep(1, 10)), 2), labels=c("a", "A"))
@@ -62,18 +64,87 @@ b.fac <- factor(c(rep(0, 20), rep(1, 20)), labels=c("b", "B"))
 fac.lm <- lm(y ~ a.fac*b.fac)
 anova(fac.lm)
 summary(fac.lm)
+```
+```{r gmods, echo=F}
 library(gmodels)
 model.mat <- rbind("ab"=c(1, 0, 0, 0),
                    "Ab"=c(1, 1, 0, 0),
                    "aB"=c(1, 0, 1, 0),
-                   "AB"=c(1, 0, 0 ,1)
-estimable(fit.3, rbind("M-F|A"= c(model.mat[1,] - model.mat[4,])))
-### stopped here.
+                   "AB"=c(1, 1, 1 ,1))
+fac.lsm <- estimable(fac.lm, model.mat)
+## estimable(fac.lm, rbind("Ab - ab"= c(model.mat[2,] - model.mat[1,])))
+## estimable(fac.lm, rbind("A Effect"= c(model.mat[4,] + model.mat[2,] -
+##                                          (model.mat[3,] + model.mat[1,]))*.5))
+## estimable(fac.lm, rbind("B Effect"= c(model.mat[4,] + model.mat[3,] -
+##                                          (model.mat[2,]+ model.mat[1,]))*.5))
+## estimable(fac.lm, rbind("AB Inter"= c(model.mat[4,] - model.mat[3,] -
+##                                           model.mat[2,]+ model.mat[1,])*.5))
 
-fit.contrast(fac.lm, "a.fac", c(-1, 1), conf=.95)
-fit.contrast(fac.lm, "b.fac", c(-1, 1), conf=.95)
-intervals(fac.lm)
-?fit.contrast
-fit.contrast(fac.lm, "a.fac",  coef=c(1, -1), showall=T)
+lsm.df <- data.frame(lsmean=fac.lsm$Estimate,
+                     lower.CL = fac.lsm$Estimate + qt(.025, fac.lsm$DF) *
+                         fac.lsm$Std.,
+                     upper.CL = fac.lsm$Estimate + qt(.9755, fac.lsm$DF) *
+                         fac.lsm$Std.) 
+##lsm.df                         
+```
+
+```{r hibayes, cache=T, echo=F}
+library(xtable)
+library(brms)
+fit1 <- brm(formula=y ~ 1 + (1 | group), data=df01,
+            warmup=1000, iter=2000, control=list(adapt_delta=0.9))
+
+summary(fit1)
+
+post1 <- posterior_samples(fit1)
+## str(post1)  ## may be a useful approach
+## grep("Ab", names(post1))
+## grep("ab", names(post1))
+
+m1.ab <- apply( post1[c(1, 4)], 1, sum)
+m1.Ab <- apply( post1[c(1, 5)], 1, sum)
+m1.aB <- apply( post1[c(1, 6)], 1, sum)
+m1.AB <- apply( post1[c(1, 7)], 1, sum)
+
+mc.sum <- function(x) c(mean=mean(x), quantile(x, c(0.025, 0.1, 0.5, 0.9, 0.975)))
+
+
+mcmc.parEst <- rbind("ab" = mc.sum(m1.ab), "Ab" = mc.sum(m1.Ab),
+                     "aB" = mc.sum(m1.aB), "AB" = mc.sum(m1.AB))
+parEst.group <- as.data.frame(mcmc.parEst)
+names(parEst.group) <- c("mean", "q.02", "q.10", "q.50", "q.90", "q.98")
+## parEst.group
+```
+```{r outtable, output='asis'}
+xtable(mcmc.parEst)
+```
+
+```{r groupfig, echo=F}
+graph.offset <- 0.45
+g.offset2 <- 0.55
+## function to graph data, Bayes, and LSM results
+group.compare <- function(x=group, y=fev1, data.df=tmp.df, bayes.df, lsm.df, title="") {
+    ggplot(aes(x=group, y=y), data=data.df) +
+        geom_boxplot(outlier.size=0, outlier.alpha=0) +
+            geom_jitter(width=.2) +
+    geom_segment(aes(x=c(1:4)+graph.offset, y=q.02, xend=c(1:4)+graph.offset, yend=q.98),
+                 data=bayes.df, col=2) +
+                     geom_segment(aes(x=c(1:4)+ graph.offset,
+                                      y=q.10, xend=c(1:4)+graph.offset, yend=q.90),
+                                  data=bayes.df, col=2, lwd=3) +
+    geom_point(aes(x=c(1:4)+graph.offset, y=mean), data=bayes.df, pch=3, col=1) + 
+        geom_segment(aes(x=c(1:4)+g.offset2, y=lower.CL, xend=c(1:4)+g.offset2, yend=upper.CL),
+                     data=lsm.df, col='blue') +
+                         geom_point(aes(x=c(1:4)+g.offset2, y=lsmean),
+                                    data=lsm.df, col='blue') +
+        ggtitle(title)
+}
+
+```
+
+```{r newfig, fig.width=6, echo=F}
+set.seed(1959)
+group.compare(x=group, y=y, df01, bayes.df=parEst.group , lsm.df=lsm.df,
+              title="Data and results for A and B treatment groups")
 
 ```
