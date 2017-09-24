@@ -1,0 +1,7 @@
+base
+ggplot2
+gmodels
+xtable
+Rcpp
+brms
+knitr

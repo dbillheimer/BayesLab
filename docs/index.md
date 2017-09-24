@@ -1,7 +1,7 @@
 --- 
 title: "BayesLab - Exploring Bayesian Hierarchical Modeling"
 author: "Dean Billheimer"
-date: "2017-09-05"
+date: "2017-09-24"
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: [book.bib]
