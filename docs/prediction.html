@@ -32,8 +32,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   
+<link rel="prev" href="introduction-a-first-example-.html">
 
-<link rel="next" href="introduction-a-first-example-.html">
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
@@ -116,33 +116,122 @@ code > span.er { color: #ff0000; font-weight: bold; }
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="header">
-<h1 class="title">BayesLab - Exploring Bayesian Hierarchical Modeling and Predictive Inference</h1>
-<h4 class="author"><em>Dean Billheimer</em></h4>
-<h4 class="date"><em>2018-01-04</em></h4>
+<div id="prediction" class="section level1">
+<h1><span class="header-section-number">Chapter 2</span> Prediction</h1>
+<p>Let’s look at the same problem from a predictive perspective. Suppose we are interested in reproducible results; reproducible in the sense that future observations (or means of samples of observations) are affected by Aa, Bb, or their combination. As before we fit a Bayesian hierarchial model to the frauda</p>
+<!-- ```{r init, echo=F} -->
+<!-- library(knitr) -->
+<!-- Hmisc::knitrSet(w=7, h=5, lang='markdown') ## omit the ## at the beginning of R output -->
+<!-- ## lines -->
+<!-- ##args(Hmisc::knitrSet) -->
+<!-- ``` -->
+
+<p><img src="02-Diving-In_files/figure-html/datasim-1.png" width="576" /></p>
+<pre><code>## Compiling the C++ model</code></pre>
+<pre><code>## Start sampling</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;gaussian(identity) brms-model&#39; NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.167906 seconds (Warm-up)
+##                0.278635 seconds (Sampling)
+##                0.446541 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;gaussian(identity) brms-model&#39; NOW (CHAIN 2).
+## 
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.1738 seconds (Warm-up)
+##                0.171809 seconds (Sampling)
+##                0.345609 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;gaussian(identity) brms-model&#39; NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.181219 seconds (Warm-up)
+##                0.158085 seconds (Sampling)
+##                0.339304 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;gaussian(identity) brms-model&#39; NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.159684 seconds (Warm-up)
+##                0.177277 seconds (Sampling)
+##                0.336961 seconds (Total)</code></pre>
+<pre><code>## Warning: There were 14 divergent transitions after warmup. Increasing adapt_delta above 0.9 may help. See
+## http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup</code></pre>
+<pre><code>## Warning: Examine the pairs() plot to diagnose sampling problems</code></pre>
+<pre><code>## Pr(ab &lt; Ab) Pr(ab &lt; Ab) Pr(ab &lt; AB) Pr(Ab &lt; AB) Pr(aB &lt; AB) 
+##     0.63700     0.64250     0.81800     0.72125     0.72200</code></pre>
+<pre><code>## pred.string
+##    1324    1234    2134    3124    1243    1342    3214    2314    2143 
+## 0.12700 0.12625 0.09350 0.07475 0.06575 0.06475 0.06075 0.05700 0.04275 
+##    3142    1432    1423    3241    2341    2413    3412    4132    4123 
+## 0.04050 0.03525 0.03300 0.02525 0.02100 0.01900 0.01775 0.01550 0.01475 
+##    3421    2431    4312    4213    4231    4321 
+## 0.01400 0.01325 0.01050 0.00950 0.00925 0.00900</code></pre>
+<p><img src="02-Diving-In_files/figure-html/preddist-1.png" width="576" /></p>
+
+
+
+
+<div class="references">
+
 </div>
-<div id="preface" class="section level1 unnumbered">
-<h1>Preface</h1>
-<p>Bayesian inference in hierarchical models offers advantages in estimation and inference by “borrowing strength” across similar groups. While I understand the principles of hierarchical modeling, I suspect I’m missing some of the nuances of how this works. On a different topic (but related!), I think a predictive approach to inference may lead to improved interpretation of experimental/analysis results. That is, the “reproducibility crisis” in science, may instead be viewed as an interpretation crisis, at least in part. This ebook explores theoretical and practical advantages of Bayesian hierarchical modeling and predictive inference.</p>
-<p>Specifically, there are multiple issues I want to explore:</p>
-<ol style="list-style-type: decimal">
-<li><p>Efficiency gains in factorial experiments. By way of example, suppose I have a two-factor experiment (A and B) each with two levels. The full factorial structure consists of ab, aB, Ab, and AB. Further, suppose A is the primary factor of interest, and B is more exploratory (think predictive biomarker). A standard sample size calculation (<span class="math">\(\delta = 1\)</span>, <span class="math">\(\alpha = 0.05\)</span>, power 0.8) evaluating A only requires <span class="math">\(n=17\)</span> EUs per group, for each of two groups (a and A). Conversely, the full factorial suggests <span class="math">\(n=12\)</span> for each of the four groups to test the main A effect (via linear contrast). What’s up with that?</p>
-<p>It “feels” like the first analysis (two group) puts all posterior probability on the “no B effect” hypothesis, while the second assumes the general hypothesis of four disparate groups. Neither of these is satisfactory. Each assumes something (or appears to) about the effect of B.</p></li>
-<li><p>What do we do with sample size? Maybe information gain or other metrics are better criteria than power? For phase III trials with FDA review, fixed significance level <span class="math">\(\alpha = 0.05\)</span>, and high power (<span class="math">\(&gt; 80\)</span>%) may be appropriate (maybe?). What about for laboratory studies with mice? or translational studies with prospectively sampled tissue specimens? or a phase I/II study with a single dose? or a single arm trial against a historical control? Reasonable loss/utility structures for developmental experiments seem to be not that well developed (or at least I don’t know them).</p></li>
-<li><p>How does explicit hierarchical modeling improve upon sequential (conditional) modeling based on sufficient statistics?</p></li>
-<li><p>Superficially, any advantages from hierarchical modeling would seem to accrue from Stein’s result regarding MSE (EMSE?) for estimation of multiple parameters. Is this the only phenomenon at work here?</p></li>
-<li><p>What constitutes a reproducible result? Surely it must include something about the (expected) result of a future experiment. Perhaps this idea should inform our utility structure?</p></li>
-</ol>
-
-
 </div>
             </section>
 
           </div>
         </div>
       </div>
+<a href="introduction-a-first-example-.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
 
-<a href="introduction-a-first-example-.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>

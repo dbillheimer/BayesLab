@@ -1,14 +1,76 @@
-# Diving In
+# Prediction
 
-Now let's talk details.
+Let's look at the same problem from a predictive perspective. Suppose we are
+interested in reproducible results; reproducible in the sense that future
+observations (or means of samples of observations) are affected by Aa, Bb, or
+their combination.  As before we fit a Bayesian hierarchial model to the frauda
 
 
-```{r sum, eval=T}
-	summary(cars)
+<!-- ```{r init, echo=F} -->
+<!-- library(knitr) -->
+<!-- Hmisc::knitrSet(w=7, h=5, lang='markdown') ## omit the ## at the beginning of R output -->
+<!-- ## lines -->
+<!-- ##args(Hmisc::knitrSet) -->
+<!-- ``` -->
+
+```{r datasim, fig.width=6, echo=F}
+library(ggplot2)
+n <- 10
+group <- gl(4, 10, labels=c("ab", "Ab", "aB", "AB"))
+mu <- kronecker(c(3, 4, 4, 5), rep(1, 10))
+set.seed(1959)
+y <- rnorm(4 * n, mu, 1)
+df01 <- data.frame(group=group, y=y)
+qplot(group, y, geom=c("boxplot", "point") ) +
+    ggtitle("Observations from a two-factor experiment")
 ```
 
-```{r afig, eval=T, fig.width=7}
-	plot(cars)
-	
+```{r hibayes, cache=T, echo=F}
+library(xtable)
+library(brms)
+fit1 <- brm(formula=y ~ 1 + (1 | group), data=df01,
+            warmup=1000, iter=2000, control=list(adapt_delta=0.9))
+
+##summary(fit1)
+
+post1 <- posterior_samples(fit1)
+## str(post1)  ## may be a useful approach
+## grep("Ab", names(post1))
+## grep("ab", names(post1))
+
+mu.ab <- apply( post1[c(1, 4)], 1, sum)
+mu.Ab <- apply( post1[c(1, 5)], 1, sum)
+mu.aB <- apply( post1[c(1, 6)], 1, sum)
+mu.AB <- apply( post1[c(1, 7)], 1, sum)
+sigma.mc <- post1[[3]]
+
+## predictive samples
+set.seed(1960)
+pred.ab <- rnorm(4000, mu.ab, sigma.mc)
+pred.Ab <- rnorm(4000, mu.Ab, sigma.mc)
+pred.aB <- rnorm(4000, mu.aB, sigma.mc)
+pred.AB <- rnorm(4000, mu.AB, sigma.mc)
+
+ab.Ab <- sum(pred.ab < sample(pred.Ab))/length(pred.ab)
+ab.aB <- sum(pred.ab < sample(pred.aB))/length(pred.ab)
+ab.AB <- sum(pred.ab < sample(pred.AB))/length(pred.ab)
+Ab.AB <- sum(pred.Ab < sample(pred.AB))/length(pred.Ab)
+aB.AB <- sum(pred.aB < sample(pred.AB))/length(pred.aB)
+c("Pr(ab < Ab)"=ab.Ab, "Pr(ab < Ab)"=ab.aB, "Pr(ab < AB)"=ab.AB,
+  "Pr(Ab < AB)"=Ab.AB, "Pr(aB < AB)"=aB.AB)
+
+set.seed(2018)
+pred.order <- t(apply(cbind(sample(pred.ab), sample(pred.Ab), sample(pred.aB),
+                            sample(pred.AB)), 1, order)) 
+pred.string <- apply(pred.order, 1, function(x) paste0(x, collapse=''))
+sort(table(pred.string)/4000, decreasing=T)
+
 ```
 
+```{r preddist, fig.width=6, echo=F}
+qplot(x=pred.ab, geom='density') + geom_density(aes(x=pred.Ab), col=2) +
+    geom_density(aes(x=pred.aB), col=3) +
+        geom_density(aes(x=pred.AB), col=4) +
+            ggtitle("Predictive Densitites for the Four Groups")
+
+```

@@ -1,5 +1,0 @@
-Compiling the C++ model
-Start sampling
-Warning: There were 10 divergent transitions after warmup. Increasing adapt_delta above 0.9 may help. See
-http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-Warning: Examine the pairs() plot to diagnose sampling problems
