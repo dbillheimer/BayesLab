@@ -1,0 +1,402 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode; -*-
+\documentclass[12pt]{article}
+
+\usepackage{geometry}
+\usepackage{fullpage}
+
+% See geometry.pdf to learn the layout options. There are lots.
+
+\geometry{letterpaper}           % ... or a4paper or a5paper or ...
+
+%\geometry{landscape}             % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}   % Activate to begin paragraphs with 
+                                  % an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{verbatim}
+\usepackage{float}
+% verbatim package is required for \begin{comment} and \end{comment}
+% verbatim package is required for \begin{comment} and \end{comment}
+\let\remark=\comment % This makes it so \begin{remark} makes 
+                        % text not show up
+\let\endremark=\endcomment
+%\renewenvironment{remark}{}{}  % This resets remarks to show up again.
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+%%% ===================================================================
+%%%  ==== path to graphics ==========
+%% /figure is created by default in the cwd
+
+
+%%%%  === Macros graphics insertion===
+%Command for sizing to width    \figw{file}{fraction of \textwidth}
+\newcommand{\figw}[2]{\centerline{\includegraphics[width=#2\textwidth]{#1}}}
+%Command for sizing to height   \figh{file}{fraction of \textheight}
+\newcommand{\figh}[2]{\centerline{\includegraphics[height=#2\textheight]{#1}}}
+%Use \figh{graphics file name}{1} to size to whole text height
+%For graphics needing no shrinkage:  \fig{file}
+\newcommand{\fig}[1]{\centerline{\includegraphics{#1}}}
+
+%%%%  === Macros save typing ===
+\newcommand{\ft}[1]{\frametitle{#1}}
+\newcommand{\bit}{\begin{itemize}}
+\newcommand{\eit}{\end{itemize}}
+
+\newcommand{\bne}{\begin{equation}}
+\newcommand{\ene}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray*}}
+\newcommand{\eea}{\end{eqnarray*}}
+
+\newcommand{\benum}{\begin{enumerate}}
+\newcommand{\eenum}{\end{enumerate}}
+
+%%\newcommand{\bsly}{\begin{slide}}
+%%\newcommand{\esly}{\end{slide}}
+
+%%% ==================================================================
+%%% knitr options
+%% chunk options - one line, no breaks. Avoid spaces and periods in labels.
+%% dash - and underscore _ are ok
+<<'RchunkOpts', results='hide', echo=F>>=
+knitr::opts_chunk$set(cache=F, comment=NA, echo=FALSE, results='hide', warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(fig.width=7.5, fig.height=7)
+## what about caching??
+@ 
+
+%%% ==================================================================
+<<'preamble', echo=FALSE>>=
+##library("xlsx")
+library("dplyr")
+library("xtable")
+library("tidyr")
+library("ggplot2")
+##library("lme4")
+##library("MASS")
+library("rms")
+@ 
+
+%%% ==================================================================
+\title{Sequential Testing Simulations}
+\author{Dean Billheimer \\ {\tt <dean.billheimer@arizona.edu>}}
+%\date{}                      % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+Frank Harrell's web post ``Continuous Learning from Data: No Multiplicities from
+Computing and Using Bayesian Posterior Probabilities as Often as Desired''
+(October 2017, http://www.fharrell.com/post/bayes-seq/) makes use of a nice
+simulation for multiple testing in continuous learning.  The simulations are
+reproduced here, with a few additional explorations.  
+
+\begin{quote}
+ (In a Bayesian analysis) It is entirely appropriate to collect data until a
+  point has been proven or disproven, or until the data collector runs out of
+  time, money, or patience. \\
+  — Edwards, Lindman, Savage (1963)
+\end{quote}
+
+\section{Introduction}
+Here I copy text from Frank's blog.
+{\it
+We consider the simplest clinical trial design for illustration. The efficacy
+measure is assumed to be normally distributed with mean $\mu$ and variance 1.0, μ=0
+indicates no efficacy, and $\mu<0$ indicates a detrimental effect. Our inferential
+jobs are to see if evidence may be had for a positive effect and to see if
+further there is evidence for a clinically meaningful effect (except for the
+futility analysis, we will ignore the latter in what follows). Our business task
+is to not spend resources on treatments that have a low chance of having a
+meaningful benefit to patients. The latter can also be an ethical issue: we’d
+like not to expose too many patients to an ineffective treatment. In the
+simulation, we stop for futility when the probability that $\mu<0.05$ exceeds 0.9,
+considering $\mu=0.05$ to be a minimal clinically important effect. 
+
+The logic flow in the simulation exposes what is assumed by the Bayesian analysis.
+
+\benum
+\item The prior distribution for the unknown effect $\mu$ is taken as a mixture of two
+normal distributions, each with mean zero. This is a skeptical prior that gives
+an equal chance for detriment as for benefit from the treatment. Any prior would
+have done. 
+
+\item In the next step it is seen that the Bayesian does not consider a stream
+of identical trials but instead (and only when studying performance of
+Bayesian operating characteristics) considers a stream of trials with
+different efficacies of treatment, by drawing a single value of $\mu$ from the
+prior distribution. This is done independently for 50,000 simulated
+studies. Posterior probabilities are not informed by this value of
+$\mu$. Bayesians operate in a predictive mode, trying for example to estimate 
+Prob($\mu>0$) no matter what the value of $\mu$. 
+
+\item For the current value of $\mu$, simulate an observation from a normal
+distribution with mean $\mu$ and SD=1.0. [In the code below all n=500 subjects’
+data are simulated at once then revealed one-at-a-time.] 
+
+\item Compute the posterior probability of efficacy ($\mu>0$) and of futility ($\mu<0.05$)
+using the original prior and latest data. 
+
+\item Stop the study if the probability of efficacy $≥0.95$ or the probability of
+futility $≥0.9$. 
+
+\item Repeat the last 3 steps, sampling one more subject each time and performing
+analyses on the accumulated set of subjects to date. 
+
+\item  Stop the study when 500 subjects have entered.
+\eenum    
+}
+
+What is it that the Bayesian must demonstrate to the frequentist and reviewers?
+She must demonstrate that the posterior probabilities computed as stated above
+are accurate, i.e., they are well calibrated. From our simulation design, the
+final posterior probability will either be the posterior probability computed
+after the last (500th) subject has entered, the probability of futility at the
+time of stopping for futility, or the probability of efficacy at the time of
+stopping for efficacy. How do we tell if the posterior probability is accurate?
+By comparing it to the value of $\mu$ (unknown to the posterior probability
+calculation) that generated the sequence of data points that were analyzed. We
+can compute a smooth nonparametric calibration curve for each of (efficacy,
+futility) where the binary events are $\mu>0$ and $\mu<0.05$, respectively. For the
+subset of the 50,000 studies that were stopped early, the range of probabilities
+is limited so we can just compare the mean posterior probability at the moment
+of stopping with the proportion of such stopped studies for which efficacy
+(futility) was the truth. The mathematics of Bayes dictates the mean probability
+and the proportion must be the same (if enough trials are run so that simulation
+error approaches zero). This is what happened in the simulations. 
+
+<<setup>>=
+##knitrSet(lang='blogdown', echo=TRUE)
+gmu  <- htmlGreek('mu')
+half <- htmlSpecial('half')
+geq  <- htmlTranslate('>=')
+##knitr::read_chunk('fundefs.r')
+@ 
+
+
+\subsection{Specification of the Prior}
+The prior distribution is skeptical against large values of efficacy, and
+assumes that detriment is equally likely as benefit of treatment. The prior
+favors small effects. It is a 1:1 mixture of two normal distributes each with
+mean 0. The SD of the first distribution is chosen so that P(μ > 1) = 0.1, and
+the SD of the second distribution is chosen so that P(μ > 0.25) =
+0.05. Posterior probabilities upon early stopping would have the same accuracy
+no matter which prior is chosen as long as the same prior generating μ is used
+to generate the data. 
+
+<<PriorSpecification>>=
+sd1 <- 1    / qnorm(1 - 0.1)
+sd2 <- 0.25 / qnorm(1 - 0.05)
+wt  <- 0.5   # 1:1 mixture
+pdensity <- function(x) wt * dnorm(x, 0, sd1) + (1 - wt) * dnorm(x, 0, sd2)
+x <- seq(-3, 3, length=200)
+plot(x, pdensity(x), type='l', xlab='Efficacy', ylab='Prior Degree of Belief')
+
+@ 
+
+\subsection{Sequential Testing Simulation}
+
+<<seqTesting>>=
+simseq <- function(N, prior.mu=0, prior.sd, wt, mucut=0, mucutf=0.05,
+                   postcut=0.95, postcutf=0.9,
+                   ignore=20, nsim=1000) {
+    prior.mu <- rep(prior.mu, length=2)
+    prior.sd <- rep(prior.sd, length=2)
+    sd1 <- prior.sd[1]; sd2 <- prior.sd[2]
+    v1 <- sd1 ^ 2
+    v2 <- sd2 ^ 2
+    j <- 1 : N
+    cmean <- Mu <- PostN <- Post <- Postf <- postfe <- postmean <- numeric(nsim)
+    stopped <- stoppedi <- stoppedf <- stoppedfu <- stopfe <- status <-
+        integer(nsim)
+    notignored <- - (1 : ignore)
+    
+    ## Derive function to compute posterior mean
+    pmean <- gbayesMixPost(NA, NA, d0=prior.mu[1], d1=prior.mu[2],
+                           v0=v1, v1=v2, mix=wt, what='postmean')
+  
+    for(i in 1 : nsim) {
+        ## See http://stats.stackexchange.com/questions/70855
+        component <- if(wt == 1) 1 else sample(1 : 2, size=1, prob=c(wt, 1. - wt))
+        mu <- prior.mu[component] + rnorm(1) * prior.sd[component]
+        ## mu <- rnorm(1, mean=prior.mu, sd=prior.sd) if only 1 component
+        
+        Mu[i] <- mu
+        y  <- rnorm(N, mean=mu, sd=1)
+        ybar <- cumsum(y) / j    # all N means for N sequential analyses
+        pcdf <- gbayesMixPost(ybar, 1. / j,
+                              d0=prior.mu[1], d1=prior.mu[2],
+                              v0=v1, v1=v2, mix=wt, what='cdf')
+        post  <- 1 - pcdf(mucut)
+        PostN[i] <- post[N]
+        postf <- pcdf(mucutf)
+        s <- stopped[i] <-
+            if(max(post) < postcut) N else min(which(post >= postcut))
+        Post[i]  <- post[s]   # posterior at stopping
+        cmean[i] <- ybar[s]   # observed mean at stopping
+        ## If want to compute posterior median at stopping:
+        ##    pcdfs <- pcdf(mseq, x=ybar[s], v=1. / s)
+        ##    postmed[i] <- approx(pcdfs, mseq, xout=0.5, rule=2)$y
+        ##    if(abs(postmed[i]) == max(mseq)) stop(paste('program error', i))
+        postmean[i] <- pmean(x=ybar[s], v=1. / s)
+        
+        ## Compute stopping time if ignore the first "ignore" looks
+        stoppedi[i] <- if(max(post[notignored]) < postcut) N
+                       else
+                           ignore + min(which(post[notignored] >= postcut))
+        
+        ## Compute stopping time if also allow to stop for futility:
+        ## posterior probability mu < 0.05 > 0.9
+        stoppedf[i] <- if(max(post) < postcut & max(postf) < postcutf) N
+                       else
+                           min(which(post >= postcut | postf >= postcutf))
+        
+        ## Compute stopping time for pure futility analysis
+        s <- if(max(postf) < postcutf) N else min(which(postf >= postcutf))
+        Postf[i] <- postf[s]
+        stoppedfu[i] <- s
+        
+        ## Another way to do this: find first look that stopped for either
+        ## efficacy or futility.  Record status: 0:not stopped early,
+        ## 1:stopped early for futility, 2:stopped early for efficacy
+        ## Stopping time: stopfe, post prob at stop: postfe
+        
+        stp <- post >= postcut | postf >= postcutf
+        s <- stopfe[i] <- if(any(stp)) min(which(stp)) else N
+        status[i] <- if(any(stp)) ifelse(postf[s] >= postcutf, 1, 2) else 0
+        postfe[i] <- if(any(stp)) ifelse(status[i] == 2, post[s],
+                                         postf[s]) else post[N]
+    }
+    list(mu=Mu, post=Post, postn=PostN, postf=Postf,
+         stopped=stopped, stoppedi=stoppedi,
+         stoppedf=stoppedf, stoppedfu=stoppedfu,
+         cmean=cmean, postmean=postmean,
+         postfe=postfe, status=status, stopfe=stopfe)
+}
+
+?gbayesMixPost
+
+@ 
+
+
+<<runSimulation>>=
+set.seed(1)
+z <- simseq(500, prior.mu=0, prior.sd=c(sd1, sd2), wt=wt, postcut=0.95,
+            postcutf=0.9, nsim=50000)
+mu      <- z$mu
+post    <- z$post
+postn   <- z$postn
+st      <- z$stopped
+sti     <- z$stoppedi
+stf     <- z$stoppedf
+stfu    <- z$stoppedfu
+cmean   <- z$cmean
+postmean<- z$postmean
+postf   <- z$postf
+status  <- z$status
+postfe  <- z$postfe
+rmean <- function(x) formatNP(mean(x), digits=3)
+k  <- status == 2
+kf <- status == 1
+
+plot(mu)
+
+plot(cmean, postmean)
+abline(a=0, b=1)
+plot(postn)
+
+@ 
+
+
+\subsection{Calibration of Results}
+
+Calibration of Posterior Probabilities of Efficacy for Studies Going to
+Completion
+
+<<calibration>>=
+k <- status == 0
+pp <- postfe[k]
+truly.efficacious <- mu[k] > 0
+v <- val.prob(pp, truly.efficacious)
+
+qplot(pp, mu[k], geom=c("point", "smooth"))
+@ 
+
+
+subsubsection{Calibration of Posterior Mean at Stopping for Efficacy}
+
+When stopping early because of evidence that μ > 0, the sample mean will
+overestimate the true mean. But with the Bayesian analysis, where the prior
+favors smaller treatment effects, the posterior mean/median/mode is pulled back
+by a perfect amount, as shown in the plot below.
+
+<<calibEfficacy>>=
+plot(0, 0, xlab='Estimated Efficacy',
+
+     ylab='True Efficacy', type='n', xlim=c(-2, 4), ylim=c(-2, 4))
+abline(a=0, b=1, col=gray(.9), lwd=4)
+lines(supsmu(cmean, mu))
+lines(supsmu(postmean, mu), col='blue')
+text(2, .4, 'Sample mean')
+text(-1, .8, 'Posterior mean', col='blue')
+
+@ 
+
+
+
+\section{Example Text to Communicate Study Design to a Sponsor}
+
+It is always the case that estimated a single fixed sample size is problematic,
+because a number of assumptions must be made, and the veracity of those
+assumptions is not known until the study is completed. A sequential Bayesian
+approach allows for a lower expected sample size if some allowance can be made
+for the possibility that if the study gets to a certain landmark, the results
+are equivocal, and the study can be extended. The idea is to compute the
+(Bayesian) probability of efficacy as often as desired. The study could be
+terminated early for futility or harm, and less likely, for efficacy. Such early
+termination would save more resources than one would spend to extend a promising
+but equivocal study, on the average. The intended sample size would be set. At
+that point, if results are equivocal but promising (e.g. Bayesian posterior
+probability of efficacy is > 0.8), the sponsor would have the option to decide
+to extend the study by adding more patients, perhaps in blocks of 50.
+
+
+%%% figure template for qplot
+<<'qplot', caption="caption", label="tothisp">>=
+qplot(conc, ApoC1.std/std$IRS, data=std, log='xy', geom=c("point", "smooth"),
+      method="lm",
+      ylab="IRS Normalized Apo C1 (log)",
+      xlab="Concentration (log mg/L)",
+      main="Apo C1 Standard by Day") + facet_wrap(~rack)
+@
+
+%%Figure \ref{fig:qplot} shows a pretty picture.
+
+%%% figure template for ggplot
+<<'map', caption="map of schools", label="figmap">>=
+ggplot(data=schools, aes(x=total, y=hispanic)) + 
+  geom_text(aes(label=substr(schools$location, 1, 2)), size=4.5) +
+  scale_x_continuous("Total Number of Students") +
+  scale_y_continuous("Proportion Hispanic") +
+  ggtitle("Map of School IDs")
+@
+
+%%% table template
+<<apoc1coef, results='asis', eval=F>>=
+## xtable needs a data frame
+xtable(calib.coefdf, caption="Coefficients from Calibration Curves",label="cc")
+@ 
+
+%% <<'schools-Table', results='asis', eval=T>>=
+%% print(xtable(schools[loc.order, c(1, 5, 9:12)],
+%%              digit=c(2),
+%%              caption="Caption.",
+%%              label="tab:table"),
+%%       table.placement="H",include.rownames=TRUE, caption.placement="top")
+%% @ 
+
+\end{document}
+
+<<'run', eval=F>>=
+knit2pdf("knitr-template.Rnw")
+@
