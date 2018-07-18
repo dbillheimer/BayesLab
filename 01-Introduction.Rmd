@@ -307,7 +307,8 @@ focus on effect sizes and interpretation of scientific hypotheses.
 
 ## Fundamental Problem
 I think the fundamental problem is with dichotomization of results and
-conditional analysis procedures; not conditional probabilities, but procedure
-choices that are conditional on earlier stage results.
+conditioning subsequent analyses on this choice. These are not conditional
+probabilities, but procedure choices that are conditional on earlier stage
+results. 
 
 BTW - what does interaction mean in this problem?
