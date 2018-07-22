@@ -127,3 +127,23 @@ their combination.  As before we fit a Bayesian hierarchial model to the frauda
 ```
 
 <img src="02-Diving-In_files/figure-html/preddist-1.png" width="576" />
+
+## Predicting a future 'significant' result
+
+A seemingly reasonable criterion for reproducibility is to compute the
+predictive probability of a future "significant" result, given the current
+observed data.  I use the scare quotes for "significant" because its not clear
+to me exactly what this statistical/scientific standard should be.  Let's
+proceed using the ANOVA structure from chapter 1, and see what happens.
+
+In the following, we sample $n = 10$ observations from the predictive
+distributions of the four treatment groups, and repeat the two-factor ANOVA.
+
+
+```
+## [1] 0.56625 0.59200 0.97600 0.81650
+```
+
+```
+## [1] 0.50625 0.54425 0.07325
+```
