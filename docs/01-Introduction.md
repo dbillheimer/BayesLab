@@ -159,109 +159,6 @@ In the Bayesian approach, we compute posterior probabities of unknown quantities
 (here, means and variances).
 
 
-```
-
-SAMPLING FOR MODEL 'gaussian(identity) brms-model' NOW (CHAIN 1).
-
-Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
- Elapsed Time: 0.142641 seconds (Warm-up)
-               0.16664 seconds (Sampling)
-               0.309281 seconds (Total)
-
-
-SAMPLING FOR MODEL 'gaussian(identity) brms-model' NOW (CHAIN 2).
-
-Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
- Elapsed Time: 0.182641 seconds (Warm-up)
-               0.133657 seconds (Sampling)
-               0.316298 seconds (Total)
-
-
-SAMPLING FOR MODEL 'gaussian(identity) brms-model' NOW (CHAIN 3).
-
-Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
- Elapsed Time: 0.158778 seconds (Warm-up)
-               0.218157 seconds (Sampling)
-               0.376935 seconds (Total)
-
-
-SAMPLING FOR MODEL 'gaussian(identity) brms-model' NOW (CHAIN 4).
-
-Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
- Elapsed Time: 0.150101 seconds (Warm-up)
-               0.140182 seconds (Sampling)
-               0.290283 seconds (Total)
-```
-
-```
- Family: gaussian (identity) 
-Formula: y ~ 1 + (1 | group) 
-   Data: df01 (Number of observations: 40) 
-Samples: 4 chains, each with iter = 2000; warmup = 1000; thin = 1; 
-         total post-warmup samples = 4000
-   WAIC: Not computed
- 
-Group-Level Effects: 
-~group (Number of levels: 4) 
-              Estimate Est.Error l-95% CI u-95% CI Eff.Sample Rhat
-sd(Intercept)     1.33      0.98     0.31     4.11        517 1.02
-
-Population-Level Effects: 
-          Estimate Est.Error l-95% CI u-95% CI Eff.Sample Rhat
-Intercept     3.89       0.8      2.4     5.71        409 1.01
-
-Family Specific Parameters: 
-      Estimate Est.Error l-95% CI u-95% CI Eff.Sample Rhat
-sigma     1.11      0.14     0.89     1.41       1903    1
-
-Samples were drawn using sampling(NUTS). For each parameter, Eff.Sample 
-is a crude measure of effective sample size, and Rhat is the potential 
-scale reduction factor on split chains (at convergence, Rhat = 1).
-```
 Table \ref{tab:outtable} shows mean and quantile estimates of the group means.
 
 
@@ -276,10 +173,10 @@ Table: (\#tab:outtable)Group mean estimates and quantiles from Bayesian model
 
       mean   2.5%    10%    50%    90%   97.5%
 ---  -----  -----  -----  -----  -----  ------
-ab    3.15   2.45   2.70   3.15   3.60    3.83
-Ab    3.71   3.06   3.29   3.70   4.12    4.37
-aB    3.72   3.08   3.30   3.71   4.13    4.36
-AB    4.76   4.00   4.30   4.76   5.22    5.45
+ab    3.15   2.47   2.71   3.15   3.59    3.82
+Ab    3.70   3.06   3.29   3.69   4.12    4.32
+aB    3.72   3.08   3.31   3.71   4.13    4.35
+AB    4.74   3.98   4.28   4.75   5.21    5.47
 
 
 
@@ -292,7 +189,7 @@ AB    4.76   4.00   4.30   4.76   5.22    5.45
 Figure \ref(fig:newfig} shows that Bayesian estimates 'borrow' strength'
 across groups and are shrunk toward the overall mean of all groups. In this
 example, the Bayesian credible intervals are approximately the same length as
-the classical confidence intervals (about 0.990.990.990.99%).  I also
+the classical confidence intervals (about 0.980.980.980.98%).  I also
 show Bayesian 80% posterior credible intervals. In general, these intervals are
 about 2/3 as long as 95% intervals, but still retain substantial posterior
 probability for the mean value (4 chances in 5, pretty good, que no?).  IMO this
@@ -309,8 +206,8 @@ Table: (\#tab:A-effect)Mean effect of A treatment with and without B
 
               mean    2.5%     10%    50%    90%   97.5%
 -----------  -----  ------  ------  -----  -----  ------
-A - a w/ b    0.56   -0.38   -0.07   0.56   1.17    1.49
-A - a w/ B    1.04    0.06    0.43   1.04   1.66    1.99
+A - a w/ b    0.55   -0.41   -0.07   0.55   1.17    1.47
+A - a w/ B    1.02    0.05    0.38   1.03   1.65    1.99
 
 <img src="A-effect-1.png" width="672" style="display: block; margin: auto;" />
 
@@ -318,7 +215,7 @@ A - a w/ B    1.04    0.06    0.43   1.04   1.66    1.99
 
 The figure shows that the curves are centered on mean estimates of 0.5, and 1, respectively,
 indicating (perhaps) a positive effect of A.  When B is absent, the probability
-of no effect (or negative effect) is 0.13 and when B is present is
+of no effect (or negative effect) is 0.12 and when B is present is
 0.02. Combining curves (marginalizing over B) results in
 probability 0.07. To me these results suggest some (weakish)
 evidence of an A effect regardless of the level of B, and somwhat stronger
@@ -337,7 +234,7 @@ Figure \ref{fig:ABinter} shows a density plot for the estimated interaction
 effect.  The mean estimate is about 0.5, and the 80% interval ranges from about
 -0.4 to 1.4. Greater uncertainty associated with this effect reduces the
 evidence of a positive effect.  The probability that the effect is zero (or
-negative) is 0.24.
+negative) is 0.25.
 
 The Bayesian analysis provides a similar interpretation of results as the
 factorial classical analysis.  But, I think the focus on conditional pairwise

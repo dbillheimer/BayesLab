@@ -1,7 +1,7 @@
 --- 
 title: "BayesLab - Exploring Bayesian Hierarchical Modeling and Predictive Inference"
 author: "Dean Billheimer"
-date: "2018-07-22"
+date: "2018-07-23"
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: [book.bib]

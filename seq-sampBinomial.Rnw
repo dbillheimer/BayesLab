@@ -1,0 +1,51 @@
+
+
+<<>>=
+### compare binomial parameters
+get.p <- function(s1, n1, s2, n2, M=1000) {
+ return(sum(rbeta(M, s1+1 , n1-s1+1) < rbeta(M, s2+1, n2-s2+1))/M) }
+
+set.seed(20616)
+
+theta1 <- 0.5
+theta2 <- 0.3
+
+result <- matrix(0, 10, 7)
+for(j in 1:10){
+x1 <- rbinom(400, 1, theta1)
+x2 <- rbinom(400, 1, theta2)
+s1 <- n1 <- s2 <- n2 <- 0
+p.select <- 0.5
+y1<- y2 <- arm <- integer(400)
+prob <- numeric(400)
+
+##prob
+##i <-1
+for(i in 1:400){
+    ## select arm
+    if ( runif(1) < p.select )  {
+        arm[i] <- 2
+        n2 <- n2 + 1
+        s2 <- s2 + x2[i] }  else {
+        arm[i] <- 1
+        n1 <- n1 + 1
+        s1 <- s1 + x1[i] }
+    ## update prob
+    p.select <- get.p(s1, n1, s2, n2, M=10000)
+    prob[i] <- p.select
+}
+
+##table(arm)
+N <- min(which(prob < 0.01))
+if(!is.finite(N)) N <- 400
+N1 <- length(which(arm[1:N]==1))
+S1 <- sum(x1[which(arm[1:N]==1)])
+N2 <- length(which(arm[1:N]==2))
+S2 <- sum(x2[which(arm[1:N]==2)])
+result[j,] <-  cbind(N, S1, N1, S1/N1, S2, N2, S2/N2)
+}
+
+result[1:10,]
+
+power.prop.test(p1=.1, p2=.2, power=.8)
+@ 
